@@ -2,6 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 
 pub struct Config {
+    #[allow(dead_code)]
     pub base_dir: PathBuf,
     pub versions_dir: PathBuf,
     pub bin_dir: PathBuf,
