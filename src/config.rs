@@ -1,6 +1,8 @@
 use std::fs;
+use std::path::PathBuf;
 
 pub struct Config {
+    pub base_dir: PathBuf,
     pub versions_dir: PathBuf,
     pub bin_dir: PathBuf,
 }
