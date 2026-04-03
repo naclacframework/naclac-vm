@@ -1,0 +1,11 @@
+[package]
+name = "nacvm"
+version = "1.0.0"
+edition = "2021"
+license = "MIT"
+description = "The official version manager for the Naclac framework"
+
+[dependencies]
+clap = { version = "4.6.0", features = ["derive"] }
+dirs = "6.0.0"
+colored = "3.1.1"
