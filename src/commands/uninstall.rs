@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::utils::active;
-use colored::*;
 use std::fs;
+use colored::*;
 
 pub fn execute(config: &Config, version: &str) {
     let root_path = config.versions_dir.join(version);
@@ -11,21 +11,26 @@ pub fn execute(config: &Config, version: &str) {
         return;
     }
 
-    if let Some(active_version) = active::get_active_version(config) {
-        if active_version == version {
-            println!("{} You are uninstalling the currently active version.", "Warning:".yellow().bold());
-            println!("Run `nacvm use <another_version>` to activate a different version.");
-        }
-    }
+    // 1. Check if the version we are uninstalling is the active one
+    let is_active = active::get_active_version(config) == Some(version.to_string());
 
-    println!("{} naclac v{}...", "Uninstalling".yellow().bold(), version);
-    
+    // 2. Delete the version folder
     match fs::remove_dir_all(&root_path) {
         Ok(_) => {
             println!("{} Successfully uninstalled version {}", "Success:".green().bold(), version);
+            
+            // 3. If it was active, wipe the symlink/router so we don't leave ghosts!
+            if is_active {
+                let bin_path = config.bin_dir.join("naclac");
+                let cmd_path = config.bin_dir.join("naclac.cmd");
+                let ps1_path = config.bin_dir.join("naclac.ps1");
+                
+                let _ = fs::remove_file(bin_path);
+                let _ = fs::remove_file(cmd_path);
+                let _ = fs::remove_file(ps1_path);
+                println!("{} The active version was uninstalled. Run `nacvm use <version>` to select a new one.", "Note:".yellow().bold());
+            }
         }
-        Err(e) => {
-            println!("{} Failed to uninstall version {}: {}", "Error:".red().bold(), version, e);
-        }
+        Err(e) => println!("{} Failed to uninstall version {}: {}", "Error:".red().bold(), version, e),
     }
 }
