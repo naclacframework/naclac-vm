@@ -2,49 +2,55 @@ use std::path::Path;
 use colored::*;
 
 #[cfg(target_family = "unix")]
-pub fn ensure_in_path(bin_dir: &Path) {
+pub fn ensure_in_path(bin_dir: &std::path::Path) {
     use std::fs::OpenOptions;
     use std::io::{Read, Write};
+    use std::env;
 
     let home_dir = match dirs::home_dir() {
         Some(dir) => dir,
         None => return,
     };
 
+    // 1. Detect the active shell
+    let shell = env::var("SHELL").unwrap_or_default();
+    
+    // 2. Map the shell to the correct config file
+    let target_config = if shell.contains("zsh") {
+        ".zshrc"
+    } else if shell.contains("bash") {
+        ".bashrc"
+    } else {
+        ".profile" // Fallback for sh or unknown shells
+    };
+
+    let config_path = home_dir.join(target_config);
     let export_line = format!("\n# Naclac Version Manager\nexport PATH=\"{}:$PATH\"\n", bin_dir.to_string_lossy());
-    let mut modified_any = false;
 
-    let shell_configs = vec![".zshrc", ".bashrc", ".bash_profile", ".profile"];
-
-    for config_name in shell_configs {
-        let config_path = home_dir.join(config_name);
-        
-        if config_path.exists() {
-            if let Ok(mut file) = std::fs::File::open(&config_path) {
-                let mut contents = String::new();
-                if file.read_to_string(&mut contents).is_ok() && contents.contains(".nacvm/bin") {
-                    continue; 
-                }
-            }
-
-            if let Ok(mut file) = OpenOptions::new().append(true).open(&config_path) {
-                if file.write_all(export_line.as_bytes()).is_ok() {
-                    modified_any = true;
-                    println!(
-                        "{} Automatically added nacvm to your ~/{}",
-                        "Success:".green().bold(),
-                        config_name
-                    );
-                }
+    // 3. Check if it's already installed
+    if config_path.exists() {
+        if let Ok(mut file) = std::fs::File::open(&config_path) {
+            let mut contents = String::new();
+            if file.read_to_string(&mut contents).is_ok() && contents.contains(".nacvm/bin") {
+                return; // Already configured, exit silently
             }
         }
     }
 
-    if modified_any {
-        println!(
-            "{} Please restart your terminal or run `source ~/.zshrc` (or ~/.bashrc) to apply changes.",
-            "Note:".yellow().bold()
-        );
+    // 4. Inject into the SINGLE correct file (create it if it doesn't exist)
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&config_path) {
+        if file.write_all(export_line.as_bytes()).is_ok() {
+            println!(
+                "{} Automatically added nacvm to your ~/{}",
+                "Success:".green().bold(),
+                target_config
+            );
+            println!(
+                "{} Please restart your terminal or run `source ~/{}` to apply changes.",
+                "Note:".yellow().bold(),
+                target_config
+            );
+        }
     }
 }
 
