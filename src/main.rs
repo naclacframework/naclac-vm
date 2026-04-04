@@ -23,6 +23,10 @@ enum Commands {
     Use {
         version: String,
     },
+    /// Uninstall a specific version of naclac
+    Uninstall {
+        version: String,
+    },
     /// List all installed versions
     List,
 }
@@ -37,6 +41,9 @@ fn main() {
         }
         Commands::Use { version } => {
             commands::use_ver::execute(&config, version);
+        }
+        Commands::Uninstall { version } => {
+            commands::uninstall::execute(&config, version);
         }
         Commands::List => {
             commands::list::execute(&config);
