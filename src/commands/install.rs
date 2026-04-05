@@ -5,9 +5,33 @@ use std::env;
 use colored::*;
 
 pub fn execute(config: &Config, version: &str) {
-    println!("{} naclac v{}... (This may take a few minutes)", "Installing".green().bold(), version);
+    let mut resolved_version = version.to_string();
 
-    let root_path = config.versions_dir.join(version);
+    if version.to_lowercase() == "latest" {
+        println!("🔍 Resolving latest version from crates.io...");
+        let search_output = Command::new("cargo")
+            .args(&["search", "naclac", "--limit", "1"])
+            .output()
+            .expect("Failed to fetch latest version from crates.io");
+            
+        let output_str = String::from_utf8_lossy(&search_output.stdout);
+        // Extracts "1.1.0" from: naclac = "1.1.0"    # ...
+        if let Some(line) = output_str.lines().find(|l| l.starts_with("naclac = ")) {
+            if let Some(v) = line.split('"').nth(1) {
+                resolved_version = v.to_string();
+                println!("📦 Found latest version: v{}", resolved_version);
+            }
+        }
+        
+        if resolved_version.to_lowercase() == "latest" {
+            eprintln!("{} Failed to parse the latest version from crates.io.", "Error:".red().bold());
+            std::process::exit(1);
+        }
+    }
+
+    println!("{} naclac v{}... (This may take a few minutes)", "Installing".green().bold(), resolved_version);
+
+    let root_path = config.versions_dir.join(&resolved_version);
     let root_str = root_path.to_string_lossy();
 
     let status = Command::new("cargo")
@@ -15,7 +39,7 @@ pub fn execute(config: &Config, version: &str) {
             "install",
             "naclac",
             "--version",
-            version,
+            &resolved_version,
             "--root",
             &root_str,
         ])
