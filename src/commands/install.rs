@@ -9,18 +9,9 @@ pub fn execute(config: &Config, version: &str) {
 
     if version.to_lowercase() == "latest" {
         println!("🔍 Resolving latest version from crates.io...");
-        let search_output = Command::new("cargo")
-            .args(&["search", "naclac", "--limit", "1"])
-            .output()
-            .expect("Failed to fetch latest version from crates.io");
-            
-        let output_str = String::from_utf8_lossy(&search_output.stdout);
-        // Extracts "1.1.0" from: naclac = "1.1.0"    # ...
-        if let Some(line) = output_str.lines().find(|l| l.starts_with("naclac = ")) {
-            if let Some(v) = line.split('"').nth(1) {
-                resolved_version = v.to_string();
-                println!("📦 Found latest version: v{}", resolved_version);
-            }
+        if let Some(v) = crate::utils::resolve::get_latest_version() {
+            resolved_version = v;
+            println!("📦 Found latest version: v{}", resolved_version);
         }
         
         if resolved_version.to_lowercase() == "latest" {
