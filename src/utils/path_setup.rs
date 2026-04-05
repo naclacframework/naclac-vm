@@ -46,6 +46,10 @@ pub fn ensure_in_path(bin_dir: &std::path::Path) {
                 "Note:".yellow().bold(),
                 target_config
             );
+            println!(
+                "{} Test it by running: naclac --version",
+                "Note:".yellow().bold()
+            );
         }
     }
 }
@@ -83,6 +87,10 @@ pub fn ensure_in_path(bin_dir: &Path) {
             );
             println!(
                 "      $env:PATH = \"$HOME\\.nacvm\\bin;$env:PATH\""
+            );
+            println!(
+                "{} Test it by running: naclac --version",
+                "Note:".yellow().bold()
             );
         }
     }
