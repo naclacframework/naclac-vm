@@ -14,7 +14,6 @@ pub fn execute(config: &Config) {
                 let bin_name = format!("naclac{}", std::env::consts::EXE_SUFFIX);
                 let bin_path = entry.path().join("bin").join(&bin_name);
 
-                // Only consider it fully installed if the compiled binary actually exists
                 if bin_path.exists() {
                     if let Some(folder_name) = entry.file_name().to_str() {
                         versions.push(folder_name.to_string());

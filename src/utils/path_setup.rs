@@ -12,32 +12,28 @@ pub fn ensure_in_path(bin_dir: &std::path::Path) {
         None => return,
     };
 
-    // 1. Detect the active shell
     let shell = env::var("SHELL").unwrap_or_default();
     
-    // 2. Map the shell to the correct config file
     let target_config = if shell.contains("zsh") {
         ".zshrc"
     } else if shell.contains("bash") {
         ".bashrc"
     } else {
-        ".profile" // Fallback for sh or unknown shells
+        ".profile" 
     };
 
     let config_path = home_dir.join(target_config);
     let export_line = format!("\n# Naclac Version Manager\nexport PATH=\"{}:$PATH\"\n", bin_dir.to_string_lossy());
 
-    // 3. Check if it's already installed
     if config_path.exists() {
         if let Ok(mut file) = std::fs::File::open(&config_path) {
             let mut contents = String::new();
             if file.read_to_string(&mut contents).is_ok() && contents.contains(".nacvm/bin") {
-                return; // Already configured, exit silently
+                return; 
             }
         }
     }
 
-    // 4. Inject into the SINGLE correct file (create it if it doesn't exist)
     if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&config_path) {
         if file.write_all(export_line.as_bytes()).is_ok() {
             println!(
@@ -62,7 +58,7 @@ pub fn ensure_in_path(bin_dir: &Path) {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let env_key = match hkcu.open_subkey_with_flags("Environment", KEY_READ | KEY_WRITE) {
         Ok(key) => key,
-        Err(_) => return, // Silently fail if we can't access the registry
+        Err(_) => return, 
     };
 
     let current_path: String = env_key.get_value("Path").unwrap_or_default();
@@ -82,8 +78,11 @@ pub fn ensure_in_path(bin_dir: &Path) {
                 bin_str
             );
             println!(
-                "{} You may need to restart your terminal for changes to take effect.",
+                "{} You must restart your terminal or manually run this command to apply changes:",
                 "Note:".yellow().bold()
+            );
+            println!(
+                "      $env:PATH = \"$HOME\\.nacvm\\bin;$env:PATH\""
             );
         }
     }

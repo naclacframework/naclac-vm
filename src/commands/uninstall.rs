@@ -11,15 +11,12 @@ pub fn execute(config: &Config, version: &str) {
         return;
     }
 
-    // 1. Check if the version we are uninstalling is the active one
     let is_active = active::get_active_version(config) == Some(version.to_string());
 
-    // 2. Delete the version folder
     match fs::remove_dir_all(&root_path) {
         Ok(_) => {
             println!("{} Successfully uninstalled version {}", "Success:".green().bold(), version);
             
-            // 3. If it was active, wipe the symlink/router so we don't leave ghosts!
             if is_active {
                 let bin_path = config.bin_dir.join("naclac");
                 let cmd_path = config.bin_dir.join("naclac.cmd");

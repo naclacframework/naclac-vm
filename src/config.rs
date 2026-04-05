@@ -15,11 +15,9 @@ impl Config {
         let versions_dir = base_dir.join("versions");
         let bin_dir = base_dir.join("bin");
 
-        // Ensure directories exist
         fs::create_dir_all(&versions_dir).expect("Failed to create versions directory");
         fs::create_dir_all(&bin_dir).expect("Failed to create bin directory");
 
-        // AUTOMATIC PATH CONFIGURATION!
         crate::utils::path_setup::ensure_in_path(&bin_dir);
 
         Self {
